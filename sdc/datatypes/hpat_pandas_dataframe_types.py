@@ -192,6 +192,22 @@ if config_pipeline_hpat_default is 0:
                 return _hpat_pandas_dataframe_init(series_list)
 
             return hpat_pandas_dataframe_impl
+        elif isinstance(data, types.Tuple):
+            print(">>>> construct with tuple", data)
+            from numba.special import map_tuple
+            from numba import njit
+
+            @njit
+            def make_series(tup):
+                name, values = tup
+                return pandas.Series(data=values, name=name)
+
+            def ctor(data=None, index=None, columns=None, dtype=None, copy=False):
+                many_series = map_tuple(make_series, data)
+                return _hpat_pandas_dataframe_init(many_series)
+
+            return ctor
+
 
     @box(DataFrameType)
     def hpat_pandas_dataframe_box(typ, val, c):

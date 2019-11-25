@@ -78,17 +78,21 @@ def sdc_pandas_dataframe_count(self, axis=0, level=None, numeric_only=False):
 
     if not (isinstance(numeric_only, types.Omitted) or numeric_only is False):
         raise TypingError("{} 'numeric_only' unsupported. Given: {}".format(_func_name, axis))
+    from numba.special import map_tuple
+    from numba import njit
+
+    print('>' * 80)
+    @njit
+    def do_count(colsr):
+        return colsr.count()
+
+    @njit
+    def gather_name(colsr):
+        return colsr._name
 
     def sdc_pandas_dataframe_count_impl(self, axis=0, level=None, numeric_only=False):
-        result_data = []
-        result_index = []
-
-        for dataframe_item in self._data:
-            item_count = dataframe_item.count()
-            item_name = dataframe_item._name
-            result_data.append(item_count)
-            result_index.append(item_name)
-
-        return pandas.Series(data=result_data, index=result_index)
+        result_data = list(map_tuple(do_count, self._data))
+        result_index = list(map_tuple(gather_name, self._data))
+        return pandas.Series(data=result_data)
 
     return sdc_pandas_dataframe_count_impl

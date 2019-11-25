@@ -859,7 +859,10 @@ class TestDataFrame(unittest.TestCase):
     def test_count1(self):
         # TODO: non-numeric columns should be ignored automatically
         def test_impl(n):
-            df = pd.DataFrame({'A': np.arange(n) + 1.0, 'B': np.arange(n) + 1})
+            df = pd.DataFrame((
+                ('A', np.arange(n) + 1.0),
+                ('B', np.arange(n) + 1)
+            ))
             return df.count()
 
         hpat_func = sdc.jit(test_impl)
